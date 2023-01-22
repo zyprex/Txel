@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<style>
+*{margin:0;padding:0;}
+ .title {
+     font-family: sans-serif;
+     margin:2rem 0rem 2rem 0rem;
+ }
+ #form_body { width: 50%; }
+ @media screen and (max-width: 800px) {
+     #form_body { width: 80%; }
+ }
+ @media screen and (max-width: 480px) {
+     #form_body { width: 90%; }
+ }
+ input {
+     border: 2px solid black;
+     width: 100%;
+     padding: 0.4rem;
+ }
+ .upf {
+     text-align: left;
+     font-size: 0.8rem;
+ }
+ .ok {color:blue;}
+ .failed {color:red;}
+ .box-h {
+     display: flex;
+     width: 100%;
+     align-content: center;
+     align-items: center;
+ }
+ .file-input {padding: 0.3rem; background:#80409040; flex: 6;}
+ .submit {padding: 0.5rem; min-with: 2rem;flex: 1;}
+/**********************/
+ .base-elem {
+     position: absolute;
+     width: 20px;
+     height: 20px;
+     margin: auto;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+ }
+ .el1 {
+     background: red;
+     animation: moveToTop 1s ease-in-out;
+     animation-delay: 10ms;
+     animation-iteration-count: infinite;
+ }
+ .el2 {
+     background: yellow;
+     animation: moveToTop 1.5s ease-in-out;
+     animation-delay: 10ms;
+     animation-iteration-count: infinite;
+ }
+ .el3 {
+     background: green;
+     animation: moveToTop 2s ease-in-out;
+     animation-delay: 10ms;
+     animation-iteration-count: infinite;
+ }
+ .el4 {
+     background: blue;
+     animation: moveToTop 2.5s ease-in-out;
+     animation-delay: 10ms;
+     animation-iteration-count: infinite;
+ }
+ @keyframes moveToTop {
+     0% {
+         transform: translateY(0px) rotate3d(0, 0, 0, 0deg);
+         opacity: 0;
+     }
+     20% {opacity: 0.2;}
+     50% {opacity: 0.8;}
+     80% {opacity: 0.4;}
+     100% {
+         transform: translateY(-100px) rotate3d(1, 3, 0, 360deg);
+         opacity: 0.1;
+     }
+ }
+ .am {
+     text-align: center;
+     position: absolute;
+     width: auto;
+     height: 40px;
+     margin: auto;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+ }
+ .upload-text {
+     font-family: sans-serif;
+ }
+</style>
+<head>
+    <title>Txel - upload</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8" />
+</head>
+<body>
+    <div id="upload_anim" class="am" hidden>
+        <div class="base-elem el1"></div>
+        <div class="base-elem el2"></div>
+        <div class="base-elem el3"></div>
+        <div class="base-elem el4"></div>
+        <p class="upload-text">please wait for uploading finish</p>
+    </div>
+    <center id="main_form">
+        <h1 class="title">Upload File</h1>
+        <form id="form_body" accept-charset="UTF-8" enctype="multipart/form-data" method="post" onsubmit="return submitAction()">
+                {{last_upload_file}}
+                <div class="box-h">
+                    <input id="file_chooser" name="file" type="file" class="file-input" />
+                    <input id="submit_button" type="submit" value="Upload" class="submit" />
+                </div>
+            <input id="file_name" name="file_name" type="hidden" value="" />
+        </form>
+        {{remote_disk_free}}
+        <br/><br/><br/>
+        <a href="/">Home</a>
+    </center>
+    <script>
+     document.getElementById("file_chooser").onchange = function (event) {
+         var fileList = event.target.files;
+         var s = document.getElementById("file_chooser").value.toString();
+         var fileName = document.getElementById("file_name");
+         /* parser file name, the parameter file_name is the decent file name, uri encoded  */
+         fileName.value = encodeURIComponent(s.substring(s.lastIndexOf("\\") + 1));
+         fileName.dispatchEvent(new InputEvent("input"))
+     };
+     function submitAction() {
+         /* show loading animation */
+         document.getElementById("main_form").hidden = true;
+         document.getElementById("upload_anim").hidden = false;
+         /* submit form */
+         return true;
+     }
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        tools:context=".MainActivity">
+        <LinearLayout
+            android:visibility="visible"
+            android:id="@+id/mainConfig"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/start"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="25sp"
+                android:layout_marginEnd="15sp"
+                android:text="start server"
+                android:textSize="22sp" />
+
+            <include layout="@layout/sep" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/address"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="http://0.0.0.0:"
+                    android:textSize="22sp" />
+
+                <EditText
+                    android:id="@+id/port"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:text="8080"
+                    android:textSize="22sp" />
+            </LinearLayout>
+
+            <include layout="@layout/sep" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="15sp"
+                android:layout_marginEnd="15sp"
+                android:orientation="vertical">
+                <Button
+                    android:id="@+id/loadFile"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Choose File" />
+                <TextView
+                    android:id="@+id/filePath"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="{/your/transferred/file/path}" />
+            </LinearLayout>
+
+            <include layout="@layout/sep" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="15sp"
+                android:layout_marginEnd="15sp"
+                android:orientation="vertical">
+                <Button
+                    android:id="@+id/loadDir"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Choose Directory" />
+                <TextView
+                    android:id="@+id/dirPath"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="{/your/transferred/dir/path}" />
+            </LinearLayout>
+
+            <include layout="@layout/sep" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <CheckBox
+                    android:id="@+id/keepScreenOn"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginEnd="15sp"
+                    android:text="Keep Screen On" />
+                <Button
+                    android:id="@+id/screenSaver"
+                    android:layout_weight="1"
+                    android:text="Screen Saver"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginEnd="15sp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    />
+            </LinearLayout>
+
+            <include layout="@layout/sep" />
+
+
+            <Button
+                android:layout_marginStart="15sp"
+                android:id="@+id/openDetail"
+                android:text="APP Detail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <include layout="@layout/sep" />
+            <LinearLayout
+                android:visibility="invisible"
+                android:id="@+id/qrcodeBlock"
+                android:padding="25sp"
+                android:background="@color/white"
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent">
+                <ImageView
+                    android:id="@+id/qrcodeImage"
+                    android:layout_gravity="center"
+                    android:background="@color/green_600"
+                    android:layout_width="150sp"
+                    android:layout_height="150sp"/>
+            </LinearLayout>
+            <include layout="@layout/sep" />
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:visibility="gone"
+            android:id="@+id/screenSaverLayout"
+            android:background="@color/black"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/screenSaverText"
+                android:text="Txel"
+                android:textSize="50px"
+                android:textColor="@color/white"
+                android:textAlignment="center"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:layout_width="120px"
+                android:layout_height="60px"/>
+        </RelativeLayout>
+
+
+    </LinearLayout>
+
+</ScrollView>
