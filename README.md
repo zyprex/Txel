@@ -17,9 +17,6 @@ It's use WiFi network to transfer things to any other devices.
 
 Make sure all your devices have connect to the same wifi.
 
-
-
-
 ## How to transmit plain text
 
 1. open link (The link show in app can be click)
@@ -49,7 +46,7 @@ The files been uploaded will always save to phone's Download directory.
 
 In home page enter "QRCode", make sure then parameters you enter is correct, or else it will malfunction.
 
-See "[QRCode-kotlin]()"
+See "[QRCode-kotlin](https://qrcodekotlin.com)"
 
 ## Configure
 
@@ -66,17 +63,14 @@ It will connect to `localhost` if your phone didn't have a network connection.
 ## Port in use ?
 
 If you see a prompt tell you that port in use, that's mean the http server exit due to socket bind error.
-Others is using this port. But Service not quit, by it you can see whose grab your port.
+Others is using this port. But Service not quit, you can see who is occupy your port.
 
 ## Connect reset ?
 
 Restart server
 
-
-# Credit
+# Credits
 
 - [NanoHTTPD](https://github.com/NanoHttpd/nanohttpd)
 - [QRCode-kotlin](https://github.com/g0dkar/qrcode-kotlin)
 
-
-[QRCode-kotlin]: https://qrcodekotlin.com
