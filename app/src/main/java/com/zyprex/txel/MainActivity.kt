@@ -1,9 +1,11 @@
 package com.zyprex.txel
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -27,7 +29,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -37,6 +38,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import io.github.g0dkar.qrcode.QRCode
 import java.io.*
+import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Date
@@ -56,13 +58,16 @@ class MainActivity : AppCompatActivity() {
     lateinit var httpServerBinder: MyService.HttpServerBinder
 
     private val connection = object : ServiceConnection {
+        var alive = false
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             httpServerBinder = binder as MyService.HttpServerBinder
             httpServerBinder.start()
+            alive = true
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             httpServerBinder.stop()
+            alive = false
         }
     }
 
@@ -187,7 +192,6 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
-
         val screenSaverLayout = findViewById<RelativeLayout>(R.id.screenSaverLayout)
         screenSaverLayout.layoutParams.height = screenRealHeight()
         screenSaver.setOnClickListener {
@@ -221,11 +225,7 @@ class MainActivity : AppCompatActivity() {
 
         qrcodeImage.setOnLongClickListener {
             if (qrcodeImage.drawable != null) {
-                Toast.makeText(
-                    this,
-                    "save qrcode",
-                    Toast.LENGTH_SHORT
-                ).show()
+                toast("save qrcode")
                 saveQRCode.launch("qrcode-${Date().time}.png")
             }
             true
@@ -234,7 +234,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if (MyService.server.isAlive) {
+        if (connection.alive) {
             unbindService(connection)
         }
     }
@@ -242,16 +242,18 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         intentAction(intent)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            getStoragePermission.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
     }
 
     private fun intentAction(intent: Intent) {
-        //Toast.makeText(this, "${intent.action}", Toast.LENGTH_SHORT).show()
         when (intent.action) {
             Intent.ACTION_SEND -> {
                 if ("*/*" != intent.type) {
                     handleSendFile(intent)
                 } else {
-                    Toast.makeText(this, "unknown type", Toast.LENGTH_SHORT).show()
+                    toast("unknown type uri")
                 }
             }
             else -> {
@@ -288,7 +290,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         } catch (e : Exception) {
-            //Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
             e.printStackTrace()
         } catch (e: OutOfMemoryError) {
             e.printStackTrace()
@@ -334,21 +335,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val getStoragePermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        if (!it) {
+            toast("access files need storage permission!")
+        }
+    }
+
     private fun ipAddress(): String {
-        var addr = "localhost"
         try {
             for (networkInterfaces in NetworkInterface.getNetworkInterfaces()) {
                 for(inetAddress in networkInterfaces.inetAddresses) {
                     if (!inetAddress.isLoopbackAddress && !inetAddress.isLinkLocalAddress) {
-                        addr = inetAddress.hostAddress as String
-                        return addr
+                        if (inetAddress is Inet4Address) {
+                            return inetAddress.hostAddress ?: "localhost"
+                        }
                     }
                 }
             }
         } catch (e: SocketException) {
             Log.e("MainActivity", e.toString())
         }
-        return addr
+        return "localhost"
     }
 
     private fun uriQueryFileInfo(uri: Uri) {
@@ -383,7 +390,6 @@ class MainActivity : AppCompatActivity() {
     }
     private fun screenRealWidth(): Int = screenSize().widthPixels
     private fun screenRealHeight(): Int = screenSize().heightPixels
-
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.option_menu, menu)

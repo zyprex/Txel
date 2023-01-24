@@ -10,6 +10,11 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.text.DecimalFormat
 
+
+fun toast(msg: String, long: Int = Toast.LENGTH_SHORT) {
+    Toast.makeText(MyApplication.context, msg, long).show()
+}
+
 fun assetsAsText(filename: String): String {
     val sb = StringBuilder()
     try {
@@ -44,8 +49,8 @@ var usrMineType = mutableMapOf<String, String>()
 fun refreshUsrMineType(str: String) {
     usrMineType.clear()
     str.split("\n").forEach { line ->
-        if (line.length > 4 && line.contains(' ')) {
-            val kv = line.split(" ")
+        if (line.contains(' ')) {
+            val kv = line.split(' ')
             usrMineType[kv[0]] = kv[1]
         }
     }
@@ -62,7 +67,7 @@ fun readUsrMineType(): MutableMap<String, String> {
         context.openFileInput(usrMineTypesFileName).use { fis ->
             val br = BufferedReader(InputStreamReader(fis))
             br.forEachLine {
-                if (it.length > 4 && it.contains(' ')) {
+                if (it.contains(' ')) {
                     val line = it.split(' ')
                     usrMineType[line[0]] = line[1]
                 }
@@ -73,7 +78,6 @@ fun readUsrMineType(): MutableMap<String, String> {
     } catch (e: IOException) {
         e.printStackTrace()
     }
-    //Toast.makeText(MyApplication.context, "read: $usrMineType", Toast.LENGTH_SHORT).show()
     return usrMineType
 }
 
@@ -175,6 +179,6 @@ fun validPort(port: Int): Boolean =
     if (port in 1024..49151) {
         true
     } else {
-        Toast.makeText(MyApplication.context, "port range: 1024~49151", Toast.LENGTH_LONG).show()
+        toast("port range: 1024~49151", Toast.LENGTH_LONG)
         false
     }

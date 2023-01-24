@@ -111,6 +111,8 @@ class HtmlWeaver {
         }
         if (MainActivity.outDirUri != Uri.EMPTY) {
             sb.append(tag("a", listOf("href='/l'"), "File List"))
+        } else {
+            sb.append(tag("a", listOf("href=''"), "..."))
         }
         sb.append(tag("a", listOf("href='/u'"), "Upload"))
         sb.append(tag("a", listOf("href='/t'"), "Text"))

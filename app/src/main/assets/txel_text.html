@@ -34,10 +34,16 @@
      text-decoration: none;
      text-align: center;
  }
+ .box {
+     width: 100%;
+     height: 25rem;
+     background: #348934;
+ }
  #txtbox {
+     box-sizing: border-box;
      display: block;
-     width: 95vw;
-     height: 60vh;
+     width: 100%;
+     height: 100%;
      font-size: 1.2rem;
      outline: none;
      border: none;
@@ -79,7 +85,9 @@
         <a href="" class="btn btn-line">Refresh</a>
     </div>
     {{link}}
-    <textarea name="text" id="txtbox">{{txt}}</textarea>
+    <div class="box">
+        <textarea name="text" id="txtbox">{{txt}}</textarea>
+    </div>
 </form>
 <script>
  function poptip(msg, target, time) {

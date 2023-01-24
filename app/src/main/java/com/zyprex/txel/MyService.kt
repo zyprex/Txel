@@ -9,16 +9,17 @@ import android.content.Intent
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
+import android.system.ErrnoException
 import androidx.core.app.NotificationCompat
 import fi.iki.elonen.NanoHTTPD.*
+import java.net.BindException
 import java.util.concurrent.TimeUnit
 
 class MyService : Service() {
 
-    companion object {
-        val server = HttpServer(MainActivity.ipAddress, MainActivity.ipPort)
-    }
+    //companion object {
+    //val server = HttpServer(MainActivity.ipAddress, MainActivity.ipPort)
+    //}
 
     private val mBinder = HttpServerBinder()
 
@@ -42,11 +43,23 @@ class MyService : Service() {
         }
     }
 
+
     class HttpServerBinder: Binder() {
+        val server = HttpServer(MainActivity.ipAddress, MainActivity.ipPort)
+
         fun start() {
             if (!server.isAlive) {
                 server.setTempFileManagerFactory{ MyTempFileManager() }
-                server.start(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS).toInt())
+                //server.start(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS).toInt(), false)
+                try {
+                    server.start(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS).toInt())
+                } catch (e: BindException) {
+                    server.stop()
+                    toast("Bind Error: PORT IN USE")
+                    e.printStackTrace()
+                } catch (e: ErrnoException) {
+                    e.printStackTrace()
+                }
             }
         }
         fun stop() {
@@ -67,8 +80,8 @@ class MyService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if (server.isAlive) {
-            server.stop()
+        if (mBinder.server.isAlive) {
+            mBinder.server.stop()
         }
     }
 
@@ -81,7 +94,7 @@ class MyService : Service() {
         val intent = Intent(this, MainActivity::class.java)
         val pi = PendingIntent.getActivity(this, 0, intent, 0)
         val notification = NotificationCompat.Builder(this, "my_service")
-            .setContentTitle("${resources.getString(R.string.app_name)}: Http Server Running...")
+            .setContentTitle("${resources.getString(R.string.app_name)}: Http Server Running")
             .setContentText("${MainActivity.ipAddress}:${MainActivity.ipPort}")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pi)
