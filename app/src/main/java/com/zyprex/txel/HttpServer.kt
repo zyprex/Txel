@@ -19,9 +19,6 @@ import java.io.BufferedOutputStream
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
 import java.net.URLDecoder
 import java.net.URLEncoder
 import kotlin.concurrent.thread
@@ -44,7 +41,7 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
                 }
                 when(uri) {
                     "/" -> sendIndexPage()
-                    "/d" -> sendOutFile()
+                    "/d" -> sendOutFile(session)
                     "/l" -> sendOutDir()
                     "/u" -> sendUploadPage()
                     "/t" -> sendTextPage(session)
@@ -70,9 +67,29 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
         return newFixedLengthResponse(tempText)
     }
 
-    private fun sendOutFile() : Response {
+    private fun parseRangePosition(range: String, size: Long): MutableList<Long> {
+        val posstr = range.replace("bytes=", "").split("-")
+        val pos = mutableListOf(0L, size - 1)
+        if (posstr[0].isNotEmpty()) {
+            pos[0] = posstr[0].toLong()
+        }
+        if (posstr[1].isNotEmpty()) {
+            pos[1] = posstr[1].toLong()
+        }
+        return pos
+    }
+
+    private fun sendOutFile(session: IHTTPSession?) : Response {
         val outFile = MainActivity.outFile
-        return sendFile(outFile.uri, outFile.name, outFile.path, outFile.size)
+        val headers = session?.headers
+        val range = headers?.get("range")
+        //Log.d("HttpServer", headers.toString())
+        return if (range != null) {
+            val pos = parseRangePosition(range, outFile.size)
+            sendRangeFile(outFile.uri, outFile.name, outFile.path, outFile.size, pos[0], pos[1])
+        } else {
+            sendFile(outFile.uri, outFile.name, outFile.path, outFile.size)
+        }
     }
 
     private fun sendFile(uri: Uri, name: String, path: String, size: Long): Response {
@@ -88,6 +105,29 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
         val display = if (mimeType == "application/octet-stream") "attachment" else "inline"
         response.addHeader("Content-Type", "$mimeType;charset=utf-8")
         response.addHeader("Content-Disposition", "$display;filename*=UTF-8''$filename")
+        return response
+    }
+
+    private fun sendRangeFile(uri: Uri, name: String, path: String, size: Long, start: Long, end: Long): Response {
+        if (start !in 0 until size || end !in 0 until size) {
+            return newFixedLengthResponse(Response.Status.RANGE_NOT_SATISFIABLE, MIME_PLAINTEXT, "range not satisfiable")
+        }
+        val resolver = MyApplication.context.contentResolver
+        val mimeType = extMimeType(path)
+        val rangeLength = end - start + 1
+        val response =  newFixedLengthResponse(
+            Response.Status.PARTIAL_CONTENT,
+            mimeType,
+            resolver.openInputStream(uri)?.apply { skip(start) },
+            rangeLength
+        )
+        val filename = URLEncoder.encode(name, "UTF-8")
+        val display = if (mimeType == "application/octet-stream") "attachment" else "inline"
+        response.addHeader("Content-Type", "$mimeType;charset=utf-8")
+        response.addHeader("Content-Disposition", "$display;filename*=UTF-8''$filename")
+        response.addHeader("Accept-Ranges", "bytes")
+        //response.addHeader("Content-Length", "$rangeLength")
+        response.addHeader("Content-Range", "bytes ${start}-${end}/${size}")
         return response
     }
 
@@ -107,7 +147,13 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
         //Log.d("HttpServer", "path $path, name $name")
         tempFileList.find { docFile -> docFile.name == name }?.let {
             if (it.isFile) {
-                return sendFile(it.uri, it.name ?: "", it.uri.path ?: "", it.length())
+                val range = session?.headers?.get("range")
+                return if (range != null) {
+                    val pos = parseRangePosition(range, it.length())
+                    sendRangeFile(it.uri, it.name ?: "", it.uri.path ?: "", it.length(), pos[0], pos[1])
+                } else {
+                    sendFile(it.uri, it.name ?: "", it.uri.path ?: "", it.length())
+                }
             }
             if (it.isDirectory) {
                 //TODO: path should query from uri

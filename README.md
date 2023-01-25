@@ -20,10 +20,10 @@ Make sure all your devices have connect to the same wifi.
 ## How to transmit plain text
 
 1. open link (The link show in app can be click)
-2. choose "Link" button
+2. click "Link" button
 3. input something on text input area
-4. click "submit"
-5. get text in other browser by just refresh webpage or click "refresh"
+4. click "submit" button
+5. get text in other browser by just refresh webpage or click "refresh" button
 
 Get raw text: `http://localhost:8080/r`
 
@@ -34,13 +34,14 @@ Prepare the text: `http://localhost:8080/t?you see me!`
 - This app use SAF to choose file and directory.
 - When you back to previous webpage in app's file list page, it require refresh page again.
 - When a directory in your choose directory, it normally can't be access except you has chose it before.
-- When you restart phone or reinstalled app, you will lost access permission for you recent chose directory.
+- When you restart phone or reinstalled app, you will lost access permission for your recent chose directories.
 
-You can share some file to this app (didn't support directory or type unknown files), then it will auto fill file's path.
+You can share some file to this app (didn't support directory or MIME type unknown files), it'll auto fill the path.
 
 ## Upload file
 
 The files been uploaded will always save to phone's Download directory.
+(**Be aware**: If your android system version below 10, then it will overwrite the same name file.)
 
 ## About QRCode generate
 
@@ -54,9 +55,9 @@ There are some options you can set.
 
 1. Dark Mode: dark light mode switch
 2. Port: set the default port
-3. Mine Type: customize your own mine-type (will take precedence).
+3. MIME Type: customize your own MIME type (will take precedence).
 
-## If network unavailable ?
+## Network unavailable ?
 
 It will connect to `localhost` if your phone didn't have a network connection.
 
