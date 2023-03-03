@@ -10,7 +10,6 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.text.DecimalFormat
 
-
 fun toast(msg: String, long: Int = Toast.LENGTH_SHORT) {
     Toast.makeText(MyApplication.context, msg, long).show()
 }

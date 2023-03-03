@@ -8,6 +8,7 @@ import android.os.Environment
 import android.os.StatFs
 import android.provider.MediaStore
 import android.util.Log
+import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import fi.iki.elonen.NanoHTTPD
@@ -39,6 +40,9 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
                 if (Regex("/l/.+").matches(uri)) {
                     return sendOutDirTree(session)
                 }
+                if (Regex("/z/.+").matches(uri)) {
+                    return sendZipDirTree(session)
+                }
                 when(uri) {
                     "/" -> sendIndexPage()
                     "/d" -> sendOutFile(session)
@@ -47,6 +51,8 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
                     "/t" -> sendTextPage(session)
                     "/r" -> sendRawText()
                     "/q" -> sendQRCodePage()
+                    "/z" -> sendZipDirPage()
+                    "/z/" -> sendZipDirPage()
                     else -> send404Page()
                 }
 
@@ -200,6 +206,31 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
         retList.addAll(fileList.sortedBy(DocumentFile::getName))
         retList.addAll(dirList.sortedBy(DocumentFile::getName))
         return retList
+    }
+
+    private fun sendZipDirTree(session: IHTTPSession?): Response {
+        val path = session?.uri?.substring(3) ?: ""
+        val nestZipDir = File(MainActivity.zipDirUri.toFile(), path)
+        if (nestZipDir.isFile) {
+            val range = session?.headers?.get("range")
+            return if (range != null) {
+                val pos = parseRangePosition(range, nestZipDir.length())
+                sendRangeFile(nestZipDir.toUri(), nestZipDir.name ,
+                    nestZipDir.path, nestZipDir.length(), pos[0], pos[1])
+            } else {
+                sendFile(nestZipDir.toUri(), nestZipDir.name,
+                    nestZipDir.path, nestZipDir.length())
+            }
+        } else if (nestZipDir.isDirectory) {
+            return newFixedLengthResponse(Response.Status.OK, MIME_HTML,
+                htmlWeaver.zipDirPage(path, nestZipDir.toUri()))
+        }
+        return newFixedLengthResponse(Response.Status.OK, MIME_PLAINTEXT, path)
+    }
+
+    private fun sendZipDirPage(): Response {
+        return newFixedLengthResponse(Response.Status.OK, MIME_HTML,
+            htmlWeaver.zipDirPage("",MainActivity.zipDirUri))
     }
 
     private fun sendIndexPage(): Response {

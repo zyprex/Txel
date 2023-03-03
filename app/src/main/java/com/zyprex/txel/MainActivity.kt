@@ -22,13 +22,7 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.LinearInterpolator
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.RelativeLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -36,12 +30,18 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.net.toFile
+import androidx.core.net.toUri
+import androidx.core.view.forEach
 import io.github.g0dkar.qrcode.QRCode
 import java.io.*
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Date
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         var ipPort: Int = 8080
         var outFile: OutFile = OutFile()
         var outDirUri: Uri = Uri.EMPTY
+        var zipDirUri: Uri = Uri.EMPTY
     }
 
     data class OutFile(val uri: Uri = Uri.EMPTY, val path: String = "", val name: String = "", val size: Long = 0L)
@@ -87,6 +88,7 @@ class MainActivity : AppCompatActivity() {
         val port = findViewById<EditText>(R.id.port)
         val loadFile = findViewById<Button>(R.id.loadFile)
         val filePath = findViewById<TextView>(R.id.filePath)
+        val unzip = findViewById<CheckBox>(R.id.unzip)
         val loadDir = findViewById<Button>(R.id.loadDir)
         val dirPath = findViewById<TextView>(R.id.dirPath)
 
@@ -150,6 +152,22 @@ class MainActivity : AppCompatActivity() {
 
         loadFile.setOnClickListener { selectFile.launch(arrayOf("*/*")) }
         filePath.text = outFile.path
+
+        unzip.setOnCheckedChangeListener { _, b ->
+            if (b) {
+                unzipFile(outFile)
+            } else {
+                zipDirUri = Uri.EMPTY
+                File(applicationContext.externalCacheDir, outFile.name).deleteRecursively()
+                toast("Zip file deleted")
+            }
+        }
+        if (outFile.name.endsWith("zip")) {
+            unzip.visibility = View.VISIBLE
+            if (File(applicationContext.externalCacheDir, outFile.name).exists()) {
+                unzip.isChecked = true
+            }
+        }
 
         loadDir.setOnClickListener { selectDir.launch(outDirUri) }
         dirPath.text = outDirUri.path ?: ""
@@ -307,11 +325,60 @@ class MainActivity : AppCompatActivity() {
         return sampleSize
     }
 
+    private fun unzipFile(outFile: OutFile) {
+        thread {
+            val tmpdir = MyApplication.context.externalCacheDir
+            val zipNameDir = File(tmpdir, outFile.name)
+            if (!zipNameDir.exists()) {
+                zipNameDir.mkdirs()
+            } else {
+                zipDirUri = zipNameDir.toUri()
+                runOnUiThread {
+                    toast("Use cached unzip files")
+                }
+                return@thread
+            }
+            ZipInputStream(BufferedInputStream(contentResolver.openInputStream(outFile.uri))).use { input ->
+                while (true) {
+                    val entry = input.nextEntry ?: break
+                    //Log.d("MainActivity", entry.name)
+                    val f = File(zipNameDir, entry.name)
+                    if (f.exists()) {
+                        input.closeEntry()
+                        continue
+                    }
+                    if (entry.isDirectory) {
+                        f.mkdirs()
+                    } else {
+                        FileOutputStream(f).use { out ->
+                            val buffer = ByteArray(1024)
+                            var len: Int
+                            while (input.read(buffer).also { len = it } > 0) {
+                                out.write(buffer, 0, len)
+                            }
+                        }
+                    }
+                    input.closeEntry()
+                }
+            }
+            zipDirUri = zipNameDir.toUri()
+            runOnUiThread {
+                toast("Zip file unzipped")
+            }
+        }
+    }
+
     private val selectFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
         if (it != null) {
             val filePath = findViewById<TextView>(R.id.filePath)
             uriQueryFileInfo(it)
             filePath.text = outFile.path
+            val unzip = findViewById<CheckBox>(R.id.unzip)
+            if (outFile.path.endsWith("zip")) {
+                unzip.visibility = View.VISIBLE
+            } else {
+                unzip.visibility = View.INVISIBLE
+            }
         }
     }
 

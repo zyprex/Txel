@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <style>
- * {margin:0;padding:0;}
+*{margin:0;padding:0;}
+
  table {
      width: 100%;
      border: none;
@@ -10,14 +11,14 @@
  th {text-align: left;}
  th,td {
      padding: 10px 5px;
-     border-bottom: 1px solid orange;
+     border-bottom: 1px solid #4157A7;
  }
  .image {
      width: 100%;
  }
 </style>
 <head>
-    <title>Txel - file list</title>
+    <title>Txel - zip dir</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8" />
@@ -25,7 +26,7 @@
 <body>
 <a href="/">Back To Home</a>
 <button style="display:float; float:right;" onclick="hideShowImage()">Gallery Mode</button><br/>
-{{file_list}}
+{{dir}}
 <script>
     function hideShowImage() {
         let imageLink = document.getElementsByClassName("image-link");

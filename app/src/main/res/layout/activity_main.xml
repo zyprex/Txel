@@ -56,11 +56,23 @@
                 android:layout_marginStart="15sp"
                 android:layout_marginEnd="15sp"
                 android:orientation="vertical">
-                <Button
-                    android:id="@+id/loadFile"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Choose File" />
+                    android:orientation="horizontal">
+                    <Button
+                        android:id="@+id/loadFile"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Choose File" />
+                    <CheckBox
+                        android:visibility="invisible"
+                        android:id="@+id/unzip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="unzip"
+                        />
+                </LinearLayout>
                 <TextView
                     android:id="@+id/filePath"
                     android:layout_width="match_parent"
