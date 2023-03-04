@@ -331,6 +331,10 @@ class MainActivity : AppCompatActivity() {
             val zipNameDir = File(tmpdir, outFile.name)
             if (!zipNameDir.exists()) {
                 zipNameDir.mkdirs()
+                runOnUiThread {
+                    val unzip = findViewById<CheckBox>(R.id.unzip)
+                    unzip.isEnabled = false
+                }
             } else {
                 zipDirUri = zipNameDir.toUri()
                 runOnUiThread {
@@ -338,9 +342,20 @@ class MainActivity : AppCompatActivity() {
                 }
                 return@thread
             }
+            var ok = true
             ZipInputStream(BufferedInputStream(contentResolver.openInputStream(outFile.uri))).use { input ->
                 while (true) {
-                    val entry = input.nextEntry ?: break
+                    var entry:ZipEntry
+                    try {
+                        entry = input.nextEntry ?: break
+                    } catch (e: UTFDataFormatException) {
+                        runOnUiThread {
+                            toast("ERROR: stop unzip due to bad data format")
+                        }
+                        ok = false
+                        input.closeEntry()
+                        break
+                    }
                     //Log.d("MainActivity", entry.name)
                     val f = File(zipNameDir, entry.name)
                     if (f.exists()) {
@@ -363,7 +378,10 @@ class MainActivity : AppCompatActivity() {
             }
             zipDirUri = zipNameDir.toUri()
             runOnUiThread {
-                toast("Zip file unzipped")
+                val unzip = findViewById<CheckBox>(R.id.unzip)
+                unzip.isEnabled = true
+                if (ok)
+                    toast("Zip file unzipped")
             }
         }
     }

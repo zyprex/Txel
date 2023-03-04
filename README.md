@@ -77,7 +77,7 @@ curl -o temp.txt "http://192.168.0.1:8080/d"
 # upload a file called 'temp.txt', rename it to TEMP.txt
 curl -F "file=@temp.txt" -F "file_name=TEMP.txt" -X POST "http://192.168.0.1:8080/u"
 
-# see what text saved in server
+# get text current saved in server
 curl "http://192.168.0.1:8080/r"
 ```
 
