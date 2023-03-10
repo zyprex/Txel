@@ -26,9 +26,12 @@ import kotlin.concurrent.thread
 
 class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
 
+    companion object {
+        var tempText  = ""
+    }
+
     private val baseUri = "http://$hostname:$port"
     private val htmlWeaver = HtmlWeaver()
-    private var tempText  = ""
     private val tempFileList = mutableListOf<DocumentFile>()
 
     override fun serve(session: IHTTPSession?): Response {
@@ -68,6 +71,7 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
             else -> send404Page()
         }
     }
+
 
     private fun sendRawText(): Response {
         return newFixedLengthResponse(tempText)

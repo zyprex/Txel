@@ -3,14 +3,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/nightMode"
-        android:title="Night Mode"
+        android:title="Night mode"
         app:showAsAction="never" />
     <item
         android:id="@+id/changeDefaultPort"
-        android:title="Change Default Port"
+        android:title="Change default port"
         app:showAsAction="never" />
     <item
         android:id="@+id/userDefMimeType"
-        android:title="User Defined Mime Type"
+        android:title="User defined MIME type"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/copySavedText"
+        android:title="Copy saved text"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/createCacheZip"
+        android:title="Extract cache as zip"
+        app:showAsAction="never" />
+
 </menu>

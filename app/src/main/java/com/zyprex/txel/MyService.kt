@@ -17,9 +17,6 @@ import java.util.concurrent.TimeUnit
 
 class MyService : Service() {
 
-    //companion object {
-    //val server = HttpServer(MainActivity.ipAddress, MainActivity.ipPort)
-    //}
 
     private val mBinder = HttpServerBinder()
 
@@ -50,7 +47,6 @@ class MyService : Service() {
         fun start() {
             if (!server.isAlive) {
                 server.setTempFileManagerFactory{ MyTempFileManager() }
-                //server.start(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS).toInt(), false)
                 try {
                     server.start(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS).toInt())
                 } catch (e: BindException) {

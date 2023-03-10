@@ -2,6 +2,7 @@
 
 The name "Txel" stands for "Transport (tx) Every Location (el)".
 It's use WiFi network to transfer things to any other devices.
+Required Android version 5.0+.
 
 # Feature Quick View
 
@@ -34,14 +35,16 @@ Prepare the text: `http://localhost:8080/t?you see me!`
 
 ## About transmit a file or a directory
 
-This app use SAF to choose file and directory. Here are some limitations:
+Txel use SAF to choose file and directory. Here are some limitations:
 
 - When you back to previous webpage in app's file list page, it require refresh page again.
 - When a directory in your choose directory, it may can't be access.
+- On Android 11 or higher, the sd card root directory, downlaod directory,
+ `Android/data/`, `Android/obb/` will be inaccessable.
 
 ## About share
 
-You can share some file to this app (didn't support directory or MIME type unknown files).
+You can share a file or some text to this app (directory or empty file are not support)
 
 ## About unzip file
 
@@ -64,9 +67,14 @@ See "[QRCode-kotlin](https://qrcodekotlin.com)"
 
 There are some options you can set.
 
-1. Dark Mode: dark light mode switch
+1. Dark mode: dark light mode switch
 2. Port: set the default port
 3. MIME Type: customize your own MIME type (will take precedence).
+
+And some functions you may find useful one day.
+
+1. Copy saved text: copy the text to clipboard by one click.
+2. Extract cache (directory) as zip: rescue your data from cache. 
 
 ## Work With Curl
 
@@ -77,8 +85,11 @@ curl -o temp.txt "http://192.168.0.1:8080/d"
 # upload a file called 'temp.txt', rename it to TEMP.txt
 curl -F "file=@temp.txt" -F "file_name=TEMP.txt" -X POST "http://192.168.0.1:8080/u"
 
-# get text current saved in server
+# get saved text on server
 curl "http://192.168.0.1:8080/r"
+
+# set saved text on server
+curl -d "text=Some String" "http://192.168.0.1:8080/t" 
 ```
 
 ## Network unavailable ?

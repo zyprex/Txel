@@ -1,6 +1,8 @@
 package com.zyprex.txel
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -30,18 +32,17 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
-import androidx.core.net.toFile
 import androidx.core.net.toUri
-import androidx.core.view.forEach
 import io.github.g0dkar.qrcode.QRCode
 import java.io.*
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Date
+import java.util.zip.Deflater
 import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
@@ -259,19 +260,30 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        intentAction(intent)
+        //intentAction(intent)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             getStoragePermission.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        onNewIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent != null)
+            intentAction(intent)
+    }
+
     private fun intentAction(intent: Intent) {
         when (intent.action) {
             Intent.ACTION_SEND -> {
-                if ("*/*" != intent.type) {
-                    handleSendFile(intent)
+                if (intent.type == "text/plain")  {
+                    handleSendText(intent)
                 } else {
-                    toast("unknown type uri")
+                    handleSendFile(intent)
                 }
             }
             else -> {
@@ -280,11 +292,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun handleSendText(intent: Intent) {
+        val text = intent.getStringExtra(Intent.EXTRA_TEXT)
+        if (text != null) {
+            HttpServer.tempText = text
+            toast("Text")
+        } else {
+            handleSendFile(intent)
+        }
+    }
+
     private fun handleSendFile(intent: Intent) {
         (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as Uri?)?.let {
-            val filePath = findViewById<TextView>(R.id.filePath)
-            uriQueryFileInfo(it)
-            filePath.text = outFile.path
+            if(!uriQueryFileInfo(it)) {
+                return
+            }
+            if (intent.type == "*/*" && outFile.size == 0L) {
+                outFile = OutFile()
+            } else {
+                val filePath = findViewById<TextView>(R.id.filePath)
+                filePath.text = outFile.path
+                toast("File")
+            }
         }
     }
 
@@ -327,7 +356,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun unzipFile(outFile: OutFile) {
         thread {
-            val tmpdir = MyApplication.context.externalCacheDir
+            val tmpdir = applicationContext.externalCacheDir
             val zipNameDir = File(tmpdir, outFile.name)
             if (!zipNameDir.exists()) {
                 zipNameDir.mkdirs()
@@ -366,7 +395,7 @@ class MainActivity : AppCompatActivity() {
                         f.mkdirs()
                     } else {
                         FileOutputStream(f).use { out ->
-                            val buffer = ByteArray(1024)
+                            val buffer = ByteArray(8192)
                             var len: Int
                             while (input.read(buffer).also { len = it } > 0) {
                                 out.write(buffer, 0, len)
@@ -382,6 +411,36 @@ class MainActivity : AppCompatActivity() {
                 unzip.isEnabled = true
                 if (ok)
                     toast("Zip file unzipped")
+            }
+        }
+    }
+    
+    private val createCacheDirZip = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
+        if (uri == null) {
+            return@registerForActivityResult
+        }
+        val tmpdir = applicationContext.externalCacheDir ?: return@registerForActivityResult
+        thread {
+            ZipOutputStream(
+                BufferedOutputStream(
+                    applicationContext.contentResolver.openOutputStream(uri, "w")
+                )
+            ).use { zos ->
+                zos.setLevel(Deflater.NO_COMPRESSION)
+                tmpdir.walkTopDown().forEach { file ->
+                    var zipFileName =
+                        file.absolutePath.removePrefix(tmpdir.absolutePath).removePrefix("/")
+                    zipFileName += if (file.isDirectory) "/" else ""
+                    //Log.d("MainActivity" , zipFileName)
+                    val entry = ZipEntry(zipFileName)
+                    zos.putNextEntry(entry)
+                    if (file.isFile) {
+                        file.inputStream().copyTo(zos)
+                    }
+                }
+            }
+            runOnUiThread {
+                toast("zip file created")
             }
         }
     }
@@ -405,6 +464,10 @@ class MainActivity : AppCompatActivity() {
             val dirPath = findViewById<TextView>(R.id.dirPath)
             outDirUri = it
             dirPath.text = outDirUri.path ?: ""
+        /*  val contentResolver = applicationContext.contentResolver
+            val takeFlags: Int = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            contentResolver.takePersistableUriPermission(it, takeFlags) */
         }
     }
 
@@ -443,7 +506,8 @@ class MainActivity : AppCompatActivity() {
         return "localhost"
     }
 
-    private fun uriQueryFileInfo(uri: Uri) {
+    private fun uriQueryFileInfo(uri: Uri): Boolean {
+        var ret = false
         val cursor  = contentResolver.query(uri,
         arrayOf(
             MediaStore.Files.FileColumns.DATA,
@@ -455,14 +519,17 @@ class MainActivity : AppCompatActivity() {
             val nameColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
             val sizeColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE)
             while (it.moveToNext()) {
+                if (outFile.uri == uri) break
                 outFile = OutFile(
                     uri = uri,
                     path = it.getString(pathColumn),
                     name = it.getString(nameColumn),
                     size = it.getLong(sizeColumn),
                 )
+                ret = true
             }
         }
+        return ret
     }
 
     //private fun screenHeight() = resources.displayMetrics.heightPixels
@@ -557,6 +624,15 @@ class MainActivity : AppCompatActivity() {
                     }
                     setNegativeButton("Cancel", null)
                 }.show()
+            }
+            R.id.copySavedText -> {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip: ClipData = ClipData.newPlainText("text", HttpServer.tempText)
+                clipboard.setPrimaryClip(clip)
+                toast("copied")
+            }
+            R.id.createCacheZip -> {
+                createCacheDirZip.launch("txel-cache.zip")
             }
             else -> {}
         }

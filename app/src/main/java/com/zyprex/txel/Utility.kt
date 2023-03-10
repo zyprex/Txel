@@ -1,5 +1,6 @@
 package com.zyprex.txel
 
+import android.app.Application
 import android.content.Context
 import android.widget.Toast
 import java.io.BufferedReader
