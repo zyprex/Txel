@@ -6,58 +6,37 @@
 #box * {margin: 4px;}
 .submit {width: 90%; padding: 4px;}
 .data {width: 90%; padding: 4px;}
- @media screen and (max-width: 800px) {
-     #box {width: 80%;}
- }
- @media screen and (max-width: 480px) {
-     #box {width: 90%;}
- }
+@media screen and (max-width: 800px) {#box {width: 80%;}}
+@media screen and (max-width: 480px) {#box {width: 90%;}}
 </style>
 <head>
-    <title>Txel - qrcode</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="UTF-8" />
+<title>Txel - qrcode</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
 </head>
 <body>
-    <div id="box">
-        <a href="/">Home</a>
-        <form method="post" action="/qrcode">
-            Data:
-            <br/>
-            <textarea class="data" name="data">{{default_data}}</textarea>
-            <br/>
-            <br/>
-            Error Correction Level:
-            <br/>
-            <input id="errLv_l" name="errLv" type="radio" value="L" />
-            <label for="errLv_l">Low(7%)</label>
-            <input id="errLv_m" name="errLv" type="radio" value="M" checked/>
-            <label for="errLv_m">Medium(15%)</label>
-            <input id="errLv_q" name="errLv" type="radio" value="Q" />
-            <label for="errLv_q">Quratile(25%)</label>
-            <input id="errLv_h" name="errLv" type="radio" value="H" />
-            <label for="errLv_h">High(30%)</label>
-            <br/>
-            <br/>
-            Cell Size:
-            <input name="cellSize" type="number" value="25" />
-            <br/>
-            Margin:
-            <input name="margin" type="number" value="0" />
-            <br/>
-            Background Color:
-            <input name="brightColor" type="text" value="#ffffff" />
-            <br/>
-            Foreground Color:
-            <input name="darkColor" type="text" value="#000000" />
-            <br/>
-            Margin Color:
-            <input name="marginColor" type="text" value="#ffffff" />
-            <br/>
-            <br/>
-            <input class="submit" type="submit" value="generate QR code" />
-        </form>
-    </div>
+<div id="box">
+<a href="/">HOME</a>
+<form method="post" action="/qrcode">
+Data:<br/>
+<textarea class="data" name="data">{{default_data}}</textarea><br/><br/>
+Error Correction Level:<br/>
+<input id="errLv_l" name="errLv" type="radio" value="L"/>
+<label for="errLv_l">Low(7%)</label>
+<input id="errLv_m" name="errLv" type="radio" value="M" checked/>
+<label for="errLv_m">Medium(15%)</label>
+<input id="errLv_q" name="errLv" type="radio" value="Q"/>
+<label for="errLv_q">Quratile(25%)</label>
+<input id="errLv_h" name="errLv" type="radio" value="H"/>
+<label for="errLv_h">High(30%)</label><br/><br/>
+Cell Size: <input name="cellSize" type="number" value="25" /><br/>
+Margin: <input name="margin" type="number" value="0" /><br/>
+Background Color: <input name="brightColor" type="text" value="#ffffff" /><br/>
+Foreground Color: <input name="darkColor" type="text" value="#000000" /><br/>
+Margin Color: <input name="marginColor" type="text" value="#ffffff" /><br/><br/>
+<input class="submit" type="submit" value="generate QR code" />
+</form>
+</div>
 </body>
 </html>

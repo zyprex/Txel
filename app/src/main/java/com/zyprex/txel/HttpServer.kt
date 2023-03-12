@@ -249,21 +249,19 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
         }
         val files = mutableMapOf<String, String>()
         session.parseBody(files)
-        val params = session.parameters as  MutableMap<String, List<String>>
+        val params = session.parameters as MutableMap<String, List<String>>
         val tempFilePath = files["file"]
-        if (tempFilePath != null) {
-            //Log.d("HttpServer", tempFilePath)
-            var fileName = params["file_name"]?.first()
-            if (fileName != null) {
-                fileName = URLDecoder.decode(fileName, "UTF-8")
-            } else {
-                fileName = params["file"]?.first()
-            }
-            //save file to Download folder
-            downloadClientUploadFile(tempFilePath, fileName)
-            return newFixedLengthResponse(Response.Status.OK, MIME_HTML, htmlWeaver.uploadPage(freeSpace(), fileName ?: ""))
+            ?: return newFixedLengthResponse(Response.Status.NOT_FOUND, MIME_HTML, htmlWeaver.notFoundPage())
+        //Log.d("HttpServer", tempFilePath)
+        var fileName = params["file_name"]?.first()
+        fileName = if (fileName != null && fileName.isNotEmpty()) {
+            URLDecoder.decode(fileName, "UTF-8")
+        } else {
+            params["file"]?.first()
         }
-        return newFixedLengthResponse(Response.Status.OK, MIME_HTML, htmlWeaver.uploadPage(freeSpace(), "///"))
+        //save file to Download folder
+        downloadClientUploadFile(tempFilePath, fileName)
+        return newFixedLengthResponse(Response.Status.OK, MIME_HTML, htmlWeaver.uploadPage(freeSpace(), fileName ?: ""))
     }
 
     private fun sendTextPage(session: IHTTPSession?): Response {
@@ -279,12 +277,27 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
         return newFixedLengthResponse(Response.Status.OK, MIME_HTML, htmlWeaver.textPage(tempText))
     }
 
+    private fun toNewFileName(fileName: String?, parentDir: String): String? {
+        if (fileName == null) return null
+        var n = 1
+        var name= fileName
+        var testFile = File(parentDir + File.separator + fileName)
+        while (testFile.exists()) {
+            name = "$fileName (${n++})"
+            testFile = File(parentDir + File.separator + name)
+        }
+        return name
+    }
+
     private fun downloadClientUploadFile(tempFilePath: String, fileName: String?) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             thread {
                 val tempFile = File(tempFilePath)
-                val downFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path + File.separator + fileName)
-                tempFile.copyTo(downFile, true)
+                val downloadDir = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS)
+                val downFile = File(downloadDir.path
+                        + File.separator + toNewFileName(fileName, downloadDir.path))
+                tempFile.copyTo(downFile, false)
                 clearCache()
             }
             return
@@ -308,7 +321,7 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
                     context.contentResolver.openOutputStream(uri).use { outputStream ->
                         if (outputStream != null) {
                             val bos = BufferedOutputStream(outputStream)
-                            val buffer = ByteArray(1024)
+                            val buffer = ByteArray(8192)
                             var bytes = bis.read(buffer)
                             while (bytes >= 0) {
                                 bos.write(buffer, 0, bytes)

@@ -2,40 +2,34 @@
 <html>
 <style>
 *{margin:0;padding:0;}
-
- table {
-     width: 100%;
-     border: none;
-     border-collapse: collapse;
- }
- th {text-align: left;}
- th,td {
-     padding: 10px 5px;
-     border-bottom: 1px solid #4157A7;
- }
- .image {
-     width: 100%;
- }
+table {
+  width: 100%;
+  border: none;
+  border-collapse: collapse;
+}
+th {text-align: left;}
+th,td {padding: 10px 5px;border-bottom: 1px solid #4157A7;}
+.image {width: 100%;}
 </style>
 <head>
-    <title>Txel - zip dir</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="UTF-8" />
+<title>Txel - zip dir</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
 </head>
 <body>
-<a href="/">Back To Home</a>
-<button style="display:float; float:right;" onclick="hideShowImage()">Gallery Mode</button><br/>
+<a href="/">HOME</a>
+<button style="display:float;float:right;" onclick="hideShowImage()">Gallery Mode</button><br/>
 {{dir}}
 <script>
-    function hideShowImage() {
-        let imageLink = document.getElementsByClassName("image-link");
-        let images = document.getElementsByClassName("image");
-        for (let i = 0; i < images.length; i++) {
-            imageLink[i].hidden = !imageLink[i].hidden;
-            images[i].hidden = !images[i].hidden;
-        }
-    }
+function hideShowImage() {
+  var imageLink = document.getElementsByClassName("image-link");
+  var images = document.getElementsByClassName("image");
+  for (var i = 0; i < images.length; i++) {
+    imageLink[i].hidden = !imageLink[i].hidden;
+    images[i].hidden = !images[i].hidden;
+  }
+}
 </script>
 </body>
 </html>

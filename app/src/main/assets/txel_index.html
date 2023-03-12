@@ -2,32 +2,26 @@
 <html>
 <style>
 *{margin:0;padding:0;}
- .index {
-     display: flex;
-     flex-wrap: wrap;
- }
- .index a {
-     font-family: sans-serif;
-     display: block;
-     font-size: 1.2rem;
-     font-weight: 600;
-     text-align: center;
-     min-width: 10rem;
-     margin: 0.2rem;
-     padding: 1rem;
-     text-decoration:none;
-     color: #444;
-     background: #aaa;
- }
-@media screen and (max-width: 480px) {
- .index a {width: 100%;}
+.index {display: flex; flex-wrap: wrap;}
+.index a {
+  font-family: sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+  min-width: 10rem;
+  margin: 0.2rem;
+  padding: 1rem;
+  text-decoration:none;
+  color: #444;
+  background: #aaa;
 }
+@media screen and (max-width: 480px) {.index a {width: 100%;}}
 </style>
 <head>
-    <title>Txel</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="UTF-8" />
+<title>Txel</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
 </head>
 <body>
 <div class="index">{{index}}</div>

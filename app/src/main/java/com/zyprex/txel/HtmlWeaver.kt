@@ -64,13 +64,9 @@ class HtmlWeaver {
             .replace("{{remote_disk_free}}",
                 tag("p", listOf(""), "remote storage free: $remoteDiskFree"))
             .replace("{{last_upload_file}}",
-                if (lastUploadFile.isNotEmpty()) {
-                    if (lastUploadFile == "///") {
-                        tag("p", listOf("class='upf failed'"), "Last upload failed")
-                    } else {
-                        tag("p", listOf("class='upf ok'"), "Last upload file: $lastUploadFile")
-                    }
-                } else "")
+                if (lastUploadFile.isNotEmpty())
+                    tag("p", "Last upload file: $lastUploadFile")
+                else "")
     }
     fun textPage(txt: String = ""): String {
         return textPage

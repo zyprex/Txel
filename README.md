@@ -2,7 +2,7 @@
 
 The name "Txel" stands for "Transport (tx) Every Location (el)".
 It's use WiFi network to transfer things to any other devices.
-Required Android version 5.0+.
+Require Android version 5.0+.
 
 # Feature Quick View
 
@@ -39,8 +39,8 @@ Txel use SAF to choose file and directory. Here are some limitations:
 
 - When you back to previous webpage in app's file list page, it require refresh page again.
 - When a directory in your choose directory, it may can't be access.
-- On Android 11 or higher, the sd card root directory, downlaod directory,
- `Android/data/`, `Android/obb/` will be inaccessable.
+- On Android 11 or higher, the sd card root directory, download directory,
+ `Android/data/`, `Android/obb/` will be inaccessible.
 
 ## About share
 
@@ -51,11 +51,12 @@ You can share a file or some text to this app (directory or empty file are not s
 Txel can unzip a zip file and server it as a directory for you (it unzip the files to app's cache dir).
 Just click unzip checkbox, it will appeared every time you choose a zip file.
 For a zip file once unzipped, it won't delete it unless you unchecked the checkbox.
+Try re-zip file if unzip file cause app crash.
 
 ## Upload file
 
-The files been uploaded will always save to phone's Download directory.
-(**Be aware**: If your android system version below 10, then it will overwrite the same name file.)
+The files been uploaded are save to phone's Download directory.
+If the file name conflict, new file will be renamed.
 
 ## About QRCode generate
 
@@ -104,6 +105,10 @@ Others is using this port. But Service not quit, you can see who is occupy your 
 ## Connect reset ?
 
 Restart server
+
+## Javascript disabled ?
+
+All the web pages can run with or without javascript.
 
 # Credits
 
