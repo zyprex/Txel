@@ -190,7 +190,7 @@ class MainActivity : AppCompatActivity() {
         val screenSaverText = findViewById<TextView>(R.id.screenSaverText)
         val screenW = screenRealWidth() - 120
         val screenH = screenRealHeight() - 60
-        var moveCount = 5
+        var moveCount = 9
         val alphaAnimation = AlphaAnimation(0f, 0.8f).apply {
             duration = 2000
             interpolator = LinearInterpolator()
@@ -203,7 +203,7 @@ class MainActivity : AppCompatActivity() {
                     if (moveCount == 0) {
                         screenSaverText.x = (0..screenW).random().toFloat()
                         screenSaverText.y = (0..screenH).random().toFloat()
-                        moveCount = 5
+                        moveCount = 9
                     } else {
                         moveCount--
                     }
@@ -304,14 +304,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleSendFile(intent: Intent) {
         (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as Uri?)?.let {
-            if(!uriQueryFileInfo(it)) {
-                return
-            }
+            if(!uriQueryFileInfo(it)) return
             if (intent.type == "*/*" && outFile.size == 0L) {
-                outFile = OutFile()
+                //outFile = OutFile()
+                //toast("No File")
             } else {
                 val filePath = findViewById<TextView>(R.id.filePath)
                 filePath.text = outFile.path
+                showUnzipOption()
                 toast("File")
             }
         }
@@ -414,6 +414,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun showUnzipOption() {
+        val unzip = findViewById<CheckBox>(R.id.unzip)
+        unzip.visibility = if (outFile.path.endsWith("zip")) View.VISIBLE else View.INVISIBLE
+    }
     
     private val createCacheDirZip = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
         if (uri == null) {
@@ -446,16 +451,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val selectFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
-        if (it != null) {
+        if(it != null && uriQueryFileInfo(it)) {
             val filePath = findViewById<TextView>(R.id.filePath)
-            uriQueryFileInfo(it)
             filePath.text = outFile.path
-            val unzip = findViewById<CheckBox>(R.id.unzip)
-            if (outFile.path.endsWith("zip")) {
-                unzip.visibility = View.VISIBLE
-            } else {
-                unzip.visibility = View.INVISIBLE
-            }
+            showUnzipOption()
         }
     }
 
@@ -507,6 +506,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun uriQueryFileInfo(uri: Uri): Boolean {
+        if (outFile.uri == uri) return false
         var ret = false
         val cursor  = contentResolver.query(uri,
         arrayOf(
@@ -519,7 +519,6 @@ class MainActivity : AppCompatActivity() {
             val nameColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
             val sizeColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE)
             while (it.moveToNext()) {
-                if (outFile.uri == uri) break
                 outFile = OutFile(
                     uri = uri,
                     path = it.getString(pathColumn),
