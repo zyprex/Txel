@@ -24,6 +24,7 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.LinearInterpolator
+import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -190,7 +191,7 @@ class MainActivity : AppCompatActivity() {
         val screenSaverText = findViewById<TextView>(R.id.screenSaverText)
         val screenW = screenRealWidth() - 120
         val screenH = screenRealHeight() - 60
-        var moveCount = 9
+        var moveCount = 8
         val alphaAnimation = AlphaAnimation(0f, 0.8f).apply {
             duration = 2000
             interpolator = LinearInterpolator()
@@ -200,10 +201,10 @@ class MainActivity : AppCompatActivity() {
                 override fun onAnimationStart(p0: Animation?) {}
                 override fun onAnimationEnd(p0: Animation?) {}
                 override fun onAnimationRepeat(p0: Animation?) {
-                    if (moveCount == 0) {
+                    if (moveCount < 0) {
                         screenSaverText.x = (0..screenW).random().toFloat()
                         screenSaverText.y = (0..screenH).random().toFloat()
-                        moveCount = 9
+                        moveCount = 8
                     } else {
                         moveCount--
                     }
@@ -578,10 +579,11 @@ class MainActivity : AppCompatActivity() {
                     keepOn = true
                 }
                 val editText = EditText(this)
+
                 editText.maxLines = 1
                 editText.inputType = InputType.TYPE_CLASS_NUMBER
                 editText.setText(ipPort.toString())
-                editText.selectAll()
+
                 AlertDialog.Builder(this).apply {
                     setTitle("Change Default Port")
                     setMessage("Possible port range: 1024~49151")
@@ -608,13 +610,13 @@ class MainActivity : AppCompatActivity() {
                     }
                 }.show()
             }
-            R.id.userDefMimeType -> {
+            R.id.customizeMimeType -> {
                 val editText = EditText(this)
                 editText.maxLines = 5
                 editText.setText(loadOriginUsrMineTypeString())
                 AlertDialog.Builder(this).apply {
-                    setTitle("User Defined Mime Type")
-                    setMessage("Example: 'text/plain html'\nThis line will let any '*.html' file show as text in browser.")
+                    setTitle("Customize MIME Type")
+                    setMessage("Example:\n'text/plain md'")
                     setView(editText)
                     setPositiveButton("Ok") { _, _ ->
                         val str = editText.text.toString()
@@ -625,10 +627,21 @@ class MainActivity : AppCompatActivity() {
                 }.show()
             }
             R.id.copySavedText -> {
+                val text = HttpServer.tempText
+                if (text.isNotBlank()) {
+                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip: ClipData = ClipData.newPlainText("text", text)
+                    clipboard.setPrimaryClip(clip)
+                    toast("copied")
+                }
+            }
+            R.id.sendClipboard -> {
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip: ClipData = ClipData.newPlainText("text", HttpServer.tempText)
-                clipboard.setPrimaryClip(clip)
-                toast("copied")
+                val text = clipboard.primaryClip?.getItemAt(0)?.text.toString()
+                if (text.isNotBlank()) {
+                    HttpServer.tempText = text
+                    toast("send")
+                }
             }
             R.id.createCacheZip -> {
                 createCacheDirZip.launch("txel-cache.zip")

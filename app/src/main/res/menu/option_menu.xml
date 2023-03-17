@@ -10,12 +10,16 @@
         android:title="Change default port"
         app:showAsAction="never" />
     <item
-        android:id="@+id/userDefMimeType"
-        android:title="User defined MIME type"
+        android:id="@+id/customizeMimeType"
+        android:title="Customize MIME type"
         app:showAsAction="never" />
     <item
         android:id="@+id/copySavedText"
         android:title="Copy saved text"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/sendClipboard"
+        android:title="Send clipboard"
         app:showAsAction="never" />
     <item
         android:id="@+id/createCacheZip"

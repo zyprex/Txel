@@ -19,7 +19,7 @@ Require Android version 5.0+.
 
 ## Before start
 
-Make sure all your devices are connect to the same wifi.
+Make sure all your devices are connect to the same wifi or hotspot.
 
 ## How to transmit plain text
 
@@ -72,25 +72,31 @@ There are some options you can set.
 2. Port: set the default port
 3. MIME Type: customize your own MIME type (will take precedence).
 
+**NOTE**: 
+For MIME List, refer to [IANA Media Type](https://www.iana.org/assignments/media-types/media-types.xhtml).
+In general, browser handle file by their MIME type, e.g. 'text/plain html',
+this line will let any '*.html' file show as text in browser.
+
 And some functions you may find useful one day.
 
-1. Copy saved text: copy the text to clipboard by one click.
-2. Extract cache (directory) as zip: rescue your data from cache. 
+1. Copy saved text: copy the text to clipboard.
+2. Send clipboard: send clipboard text.
+3. Extract cache (directory) as zip: rescue your data from cache. 
 
 ## Work With Curl
 
 ```
 # download a file called 'temp.txt'
-curl -o temp.txt "http://192.168.0.1:8080/d"
+curl -o temp.txt "http://192.168.0.2:8080/d"
 
 # upload a file called 'temp.txt', rename it to TEMP.txt
-curl -F "file=@temp.txt" -F "file_name=TEMP.txt" -X POST "http://192.168.0.1:8080/u"
+curl -F "file=@temp.txt" -F "file_name=TEMP.txt" -X POST "http://192.168.0.2:8080/u"
 
 # get saved text on server
-curl "http://192.168.0.1:8080/r"
+curl "http://192.168.0.2:8080/r"
 
 # set saved text on server
-curl -d "text=Some String" "http://192.168.0.1:8080/t" 
+curl -d "text=Some String" "http://192.168.0.2:8080/t" 
 ```
 
 ## Network unavailable ?
