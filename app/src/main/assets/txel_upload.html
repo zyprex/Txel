@@ -95,8 +95,8 @@ input {
   <div class="base-elem el3"></div>
   <div class="base-elem el4"></div>
   <p>uploading...<b id="progress">0%</b></p>
-  <p id="timePass">Time passed 00:00:00</p>
-  <p id="timeLeft">Time left 00:00:00</p>
+  <p>time pass <b id="timePass">00:00:00</b></p>
+  <p>time left <b id="timeLeft">00:00:00</b></p>
   <button style="padding:4px;" onclick="endRequest()">stop</button>
 </div>
 <div id="mainForm">
@@ -159,11 +159,11 @@ function timeFmt(ms) {
   var fmt = d.getHours().toString().padStart(2, "0") + ":";
   fmt += d.getMinutes().toString().padStart(2, "0") + ":";
   fmt += d.getSeconds().toString().padStart(2, "0");
-  return  fmt;
+  return fmt;
 }
 function showTimeInfo() {
-  timePass.innerHTML = "Time passed " + timeFmt(time_pass);
-  timeLeft.innerHTML = "Time left " + timeFmt(time_left);
+  timePass.innerHTML = timeFmt(time_pass);
+  timeLeft.innerHTML = timeFmt(time_left);
 }
 function uploadProgress(e) {
   var percent = Math.round(e.loaded * 100 / e.total);

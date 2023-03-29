@@ -2,7 +2,10 @@ package com.zyprex.txel
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
+import android.provider.MediaStore
 import android.widget.Toast
+import com.zyprex.txel.MainActivity.Companion.outFile
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.FileNotFoundException
@@ -182,3 +185,30 @@ fun validPort(port: Int): Boolean =
         toast("port range: 1024~49151", Toast.LENGTH_LONG)
         false
     }
+
+fun uriQueryFileInfo(uri: Uri): Boolean {
+    if (outFile.uri == uri) return false
+    var ret = false
+    val contentResolver = MyApplication.context.contentResolver
+    val cursor  = contentResolver.query(uri,
+        arrayOf(
+            MediaStore.Files.FileColumns.DATA,
+            MediaStore.Files.FileColumns.DISPLAY_NAME,
+            MediaStore.Files.FileColumns.SIZE,
+        ), null, null, null)
+    cursor?.use {
+        val pathColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA)
+        val nameColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
+        val sizeColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE)
+        while (it.moveToNext()) {
+            outFile = MainActivity.OutFile(
+                uri = uri,
+                path = it.getString(pathColumn),
+                name = it.getString(nameColumn),
+                size = it.getLong(sizeColumn),
+            )
+            ret = true
+        }
+    }
+    return ret
+}

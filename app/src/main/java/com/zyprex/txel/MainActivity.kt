@@ -11,9 +11,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Bundle
-import android.os.IBinder
-import android.os.Parcelable
+import android.os.*
 import android.provider.MediaStore
 import android.provider.Settings
 import android.text.InputType
@@ -24,7 +22,6 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.LinearInterpolator
-import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -33,18 +30,14 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
-import androidx.core.net.toUri
 import io.github.g0dkar.qrcode.QRCode
 import java.io.*
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Date
-import java.util.zip.Deflater
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
 import kotlin.concurrent.thread
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -54,6 +47,13 @@ class MainActivity : AppCompatActivity() {
         var outFile: OutFile = OutFile()
         var outDirUri: Uri = Uri.EMPTY
         var zipDirUri: Uri = Uri.EMPTY
+        val handler = Handler(Looper.getMainLooper()) {
+            when(it.what) {
+                100, 101 -> toast(it.obj.toString())
+                else -> {}
+            }
+            false
+        }
     }
 
     data class OutFile(val uri: Uri = Uri.EMPTY, val path: String = "", val name: String = "", val size: Long = 0L)
@@ -84,6 +84,8 @@ class MainActivity : AppCompatActivity() {
 
         ipPort = readPort().toInt()
         usrMineType = readUsrMineType()
+
+        val freqUse = FreqUse(this)
 
         val start = findViewById<SwitchCompat>(R.id.start)
         val address = findViewById<TextView>(R.id.address)
@@ -154,6 +156,14 @@ class MainActivity : AppCompatActivity() {
 
         loadFile.setOnClickListener { selectFile.launch(arrayOf("*/*")) }
         filePath.text = outFile.path
+        loadFile.setOnLongClickListener {
+            freqUse.restoreFilePath()
+            false
+        }
+        filePath.setOnLongClickListener {
+            freqUse.actOnFilePath(outFile)
+            false
+        }
 
         unzip.setOnCheckedChangeListener { _, b ->
             if (b) {
@@ -173,6 +183,15 @@ class MainActivity : AppCompatActivity() {
 
         loadDir.setOnClickListener { selectDir.launch(outDirUri) }
         dirPath.text = outDirUri.path ?: ""
+
+        loadDir.setOnLongClickListener {
+            freqUse.restoreDirPath()
+            false
+        }
+        dirPath.setOnLongClickListener {
+            freqUse.actOnDirPath(outDirUri)
+            false
+        }
 
         keepScreenOn.setOnCheckedChangeListener { _, b ->
             if (b) {
@@ -356,64 +375,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun unzipFile(outFile: OutFile) {
-        thread {
-            val tmpdir = applicationContext.externalCacheDir
-            val zipNameDir = File(tmpdir, outFile.name)
-            if (!zipNameDir.exists()) {
-                zipNameDir.mkdirs()
-                runOnUiThread {
-                    val unzip = findViewById<CheckBox>(R.id.unzip)
-                    unzip.isEnabled = false
-                }
-            } else {
-                zipDirUri = zipNameDir.toUri()
-                runOnUiThread {
-                    toast("Use cached unzip files")
-                }
-                return@thread
-            }
-            var ok = true
-            ZipInputStream(BufferedInputStream(contentResolver.openInputStream(outFile.uri))).use { input ->
-                while (true) {
-                    var entry:ZipEntry
-                    try {
-                        entry = input.nextEntry ?: break
-                    } catch (e: UTFDataFormatException) {
-                        runOnUiThread {
-                            toast("ERROR: stop unzip due to bad data format")
-                        }
-                        ok = false
-                        input.closeEntry()
-                        break
-                    }
-                    //Log.d("MainActivity", entry.name)
-                    val f = File(zipNameDir, entry.name)
-                    if (f.exists()) {
-                        input.closeEntry()
-                        continue
-                    }
-                    if (entry.isDirectory) {
-                        f.mkdirs()
-                    } else {
-                        FileOutputStream(f).use { out ->
-                            val buffer = ByteArray(8192)
-                            var len: Int
-                            while (input.read(buffer).also { len = it } > 0) {
-                                out.write(buffer, 0, len)
-                            }
-                        }
-                    }
-                    input.closeEntry()
-                }
-            }
-            zipDirUri = zipNameDir.toUri()
-            runOnUiThread {
-                val unzip = findViewById<CheckBox>(R.id.unzip)
-                unzip.isEnabled = true
-                if (ok)
-                    toast("Zip file unzipped")
-            }
-        }
+        val tmpdir = applicationContext.externalCacheDir
+        val toDir = File(tmpdir, outFile.name)
+        ZipUtil(this).unzip(toDir, outFile.uri)
     }
 
     private fun showUnzipOption() {
@@ -422,33 +386,9 @@ class MainActivity : AppCompatActivity() {
     }
     
     private val createCacheDirZip = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
-        if (uri == null) {
-            return@registerForActivityResult
-        }
+        if (uri == null) return@registerForActivityResult
         val tmpdir = applicationContext.externalCacheDir ?: return@registerForActivityResult
-        thread {
-            ZipOutputStream(
-                BufferedOutputStream(
-                    applicationContext.contentResolver.openOutputStream(uri, "w")
-                )
-            ).use { zos ->
-                zos.setLevel(Deflater.NO_COMPRESSION)
-                tmpdir.walkTopDown().forEach { file ->
-                    var zipFileName =
-                        file.absolutePath.removePrefix(tmpdir.absolutePath).removePrefix("/")
-                    zipFileName += if (file.isDirectory) "/" else ""
-                    //Log.d("MainActivity" , zipFileName)
-                    val entry = ZipEntry(zipFileName)
-                    zos.putNextEntry(entry)
-                    if (file.isFile) {
-                        file.inputStream().copyTo(zos)
-                    }
-                }
-            }
-            runOnUiThread {
-                toast("zip file created")
-            }
-        }
+        ZipUtil(this).zipDir(tmpdir, uri)
     }
 
     private val selectFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
@@ -464,10 +404,6 @@ class MainActivity : AppCompatActivity() {
             val dirPath = findViewById<TextView>(R.id.dirPath)
             outDirUri = it
             dirPath.text = outDirUri.path ?: ""
-        /*  val contentResolver = applicationContext.contentResolver
-            val takeFlags: Int = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            contentResolver.takePersistableUriPermission(it, takeFlags) */
         }
     }
 
@@ -484,9 +420,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val getStoragePermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-        if (!it) {
-            toast("access files need storage permission!")
-        }
+        if (!it) toast("access files need storage permission!")
     }
 
     private fun ipAddress(): String {
@@ -506,31 +440,6 @@ class MainActivity : AppCompatActivity() {
         return "localhost"
     }
 
-    private fun uriQueryFileInfo(uri: Uri): Boolean {
-        if (outFile.uri == uri) return false
-        var ret = false
-        val cursor  = contentResolver.query(uri,
-        arrayOf(
-            MediaStore.Files.FileColumns.DATA,
-            MediaStore.Files.FileColumns.DISPLAY_NAME,
-            MediaStore.Files.FileColumns.SIZE,
-        ), null, null, null)
-        cursor?.use {
-            val pathColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA)
-            val nameColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
-            val sizeColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE)
-            while (it.moveToNext()) {
-                outFile = OutFile(
-                    uri = uri,
-                    path = it.getString(pathColumn),
-                    name = it.getString(nameColumn),
-                    size = it.getLong(sizeColumn),
-                )
-                ret = true
-            }
-        }
-        return ret
-    }
 
     //private fun screenHeight() = resources.displayMetrics.heightPixels
     private fun screenWidth() = resources.displayMetrics.widthPixels
@@ -659,3 +568,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+

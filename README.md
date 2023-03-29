@@ -14,8 +14,9 @@ Require Android version 5.0+.
 6. generate a qrcode
 7. a screen saver for long time connection
 8. support resuming and multi-thread download
+9. remember file or directory for future use
 
-# F&Q
+# FAQ
 
 ## Before start
 
@@ -41,6 +42,12 @@ Txel use SAF to choose file and directory. Here are some limitations:
 - When a directory in your choose directory, it may can't be access.
 - On Android 11 or higher, the sd card root directory, download directory,
  `Android/data/`, `Android/obb/` will be inaccessible.
+
+## About remember frequently used file or directory
+
+Long press the file path or directory path to add or remove it from frequently used list.
+
+Long press button "choose file" or "choose directory" open frequently used list.
 
 ## About share
 

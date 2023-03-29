@@ -1,11 +1,10 @@
 package com.zyprex.txel
 
 
+import android.app.Activity
 import android.content.ContentValues
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.os.StatFs
+import android.os.*
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.net.toFile
@@ -28,6 +27,7 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
 
     companion object {
         var tempText  = ""
+        var uploadCount = 0
     }
 
     private val baseUri = "http://$hostname:$port"
@@ -54,8 +54,7 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
                     "/t" -> sendTextPage(session)
                     "/r" -> sendRawText()
                     "/q" -> sendQRCodePage()
-                    "/z" -> sendZipDirPage()
-                    "/z/" -> sendZipDirPage()
+                    "/z", "/z/" -> sendZipDirPage()
                     else -> send404Page()
                 }
 
@@ -72,10 +71,7 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
         }
     }
 
-
-    private fun sendRawText(): Response {
-        return newFixedLengthResponse(tempText)
-    }
+    private fun sendRawText(): Response = newFixedLengthResponse(tempText)
 
     private fun parseRangePosition(range: String, size: Long): MutableList<Long> {
         val posstr = range.replace("bytes=", "").split("-")
@@ -247,6 +243,12 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
         if (session == null) {
             return newFixedLengthResponse(Response.Status.NOT_FOUND, MIME_HTML, htmlWeaver.notFoundPage())
         }
+        val clientIp = session.headers["http-client-ip"]
+        // notify start
+        MainActivity.handler.sendMessage(Message().apply {
+            what = 100
+            obj = "$clientIp upload start!"
+        })
         val files = mutableMapOf<String, String>()
         session.parseBody(files)
         val params = session.parameters as MutableMap<String, List<String>>
@@ -261,6 +263,11 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
         }
         //save file to Download folder
         downloadClientUploadFile(tempFilePath, fileName)
+        // notify end
+        MainActivity.handler.sendMessage(Message().apply {
+            what = 101
+            obj = "$clientIp upload finish!"
+        })
         return newFixedLengthResponse(Response.Status.OK, MIME_HTML, htmlWeaver.uploadPage(freeSpace(), fileName ?: ""))
     }
 
@@ -297,15 +304,28 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
                     Environment.DIRECTORY_DOWNLOADS)
                 val downFile = File(downloadDir.path
                         + File.separator + toNewFileName(fileName, downloadDir.path))
+
+                uploadCount++
+
                 tempFile.copyTo(downFile, false)
-                clearCache()
+                tempFile.delete()
+
+                uploadCount--
+
+                if (uploadCount == 0) {
+                    clearCache()
+                }
             }
             return
         }
-        val context = MyApplication.context
-        val tempFile = File(context.externalCacheDir, tempFilePath.substring(context.externalCacheDir.toString().length))
-        val fileUri = Uri.fromFile(tempFile)
+
         thread {
+            val context = MyApplication.context
+            val tempFile = File(context.externalCacheDir, tempFilePath.substring(context.externalCacheDir.toString().length))
+            val fileUri = Uri.fromFile(tempFile)
+
+            uploadCount++
+
             context.contentResolver.openInputStream(fileUri).use { inputStream ->
                 val bis = BufferedInputStream(inputStream)
                 val values = ContentValues().apply {
@@ -333,7 +353,13 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
                     }
                 }
             }
-            clearCache()
+            tempFile.delete()
+
+            uploadCount--
+
+            if (uploadCount == 0) {
+                clearCache()
+            }
         }
     }
 
@@ -401,4 +427,3 @@ class HttpServer(hostname: String, port: Int): NanoHTTPD(hostname, port) {
         }
     }
 }
-
